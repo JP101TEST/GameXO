@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            text-align: center;
+        }
+
+        table {
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .slot {
+            border-style: solid;
+            border-width: 1px;
+            border-color: black;
+            height: 50px;
+            width: 50px;
+        }
+
+        .slot-no-action {
+            border-style: solid;
+            border-width: 1px;
+            border-color: black;
+            height: 50px;
+            width: 50px;
+        }
+
+        .slot:hover {
+            background-color: gray;
+            cursor: pointer;
+        }
+
+        .list {
+            border-style: solid;
+            border-width: 1px;
+            border-color: black;
+            font-weight: 800;
+            height: 25px;
+        }
+
+        .list:hover {
+            background-color: gray;
+            cursor: pointer;
+        }
+    </style>
+
+</head>
+
+
+<body>
+    <h1>XO</h1>
+    <!-- <div style="display: flex;justify-content: center;">
+        <div id="startGame" style="display: inline;">
+            <input id="sg1-1" style="margin:5px;cursor: pointer;" type="number" name="" id="" min="3">
+            <button id="sg1-2" style="margin:5px;cursor: pointer;" type="button">สร้างตาราง</button>
+            <button id="sg1-3" style="margin:5px;cursor: pointer;" type="button">ประวัติ</button>
+            <div id="historyPageReplay" style="display: inline;">
+                <button id="hpr1-1" style="margin:5px;cursor: pointer;" type="button">ย้อนกลับ</button>
+                <button id="hpr1-2" style="margin:5px;cursor: pointer;" type="button">&lt;</button>
+                <button id="hpr1-3" style="margin:5px;cursor: pointer;" type="button">&gt;</button>
+            </div>
+        </div>
+        <div id="endGame" style="display: inline;">
+            <button id="eg1-1" style="margin:5px;cursor: pointer;" type="button">เริ่มเกมส์ใหม่</button>
+            <button id="eg1-2" style="margin:5px;cursor: pointer;" type="button">replay</button>
+            <button id="eg1-3" style="margin:5px;cursor: pointer;" type="button">ย้อนกลับ</button>
+            <button id="eg1-4" style="margin:5px;cursor: pointer;" type="button">&lt;</button>
+            <button id="eg1-5" style="margin:5px;cursor: pointer;" type="button">&gt;</button>
+        </div>
+    </div>
+    <div style="display: flex;justify-content: space-around;">
+        <p>Player X</p>
+        <p>Player win is ?</p>
+        <p>Player Y</p>
+    </div> -->
+    <div style="display: flex;justify-content: center;">
+        <div id="page_1" style="display: inline;">
+            <label for="gridSize">ขนาดตาราง:</label>
+            <input id="gridSize" style="margin:5px;cursor: pointer;" type="number" name="gridSize" id="" min="3">
+            <label for="sizeWinnerScale">ขนาดช่องการชนะ:</label>
+            <input id="sizeWinnerScale" style="margin:5px;cursor: pointer;" type="number" name="sizeWinnerScale" id=""
+                min="3">
+            <button id="startGame" style="margin:5px;cursor: pointer;" type="button">สร้างตาราง</button>
+            <button id="historyPage" style="margin:5px;cursor: pointer;" type="button">ประวัติ</button>
+        </div>
+        <div id="page_2" style="display: none;">
+            <button id="backPage_1" style="margin:5px;cursor: pointer;" type="button">ย้อนกลับ</button>
+            <br><br>
+            <div style="width: 90%;">
+                <label for="historyListSelect">ประวัติการเล่น:</label>
+                <select id="historyListSelect" name="historyListSelect" style="width: 360px;height: 30px;"></select>
+            </div>
+            <button id="stepBack" style="margin:5px;cursor: pointer;" type="button" disabled>&lt;</button>
+            <button id="stepFront" style="margin:5px;cursor: pointer;" type="button" disabled>&gt;</button>
+        </div>
+        <div id="page_3" style="font-size: 20px;display: none;">
+            <div style="display: inline;font-weight: 800;color: #000000;margin: 0px 100px 0px 30px;">
+                <p id="player1">ผู้เล่น X</p>
+            </div>
+            <div id="winnerDisplay" style="display: none;font-weight: 800;color: #000000;margin: 0px 50px 0px 50px;">
+                <p id="textWinnerDisplay">ผู้เล่น ? ชนะ,เสมอ</p>
+                <button id="newGame" style="margin:5px;cursor: pointer;" type="button">กลับไปหน้าแรก</button>
+            </div>
+            <div style="display: inline;font-weight: 800;color: #9c9c9c;margin: 0px 30px 0px 100px;">
+                <p id="player2">ผู้เล่น O</p>
+            </div>
+        </div>
+    </div>
+    <br>
+    <table id="tableDisplay"></table>
+
+
+    <script src="system.js"></script>
+    <script>
+        let historyFromDatabase;
+        let historyStep;
+        let indexStep = -1;
+        let gridHistorySelected = [];
+        let historyListSelectIndex = 0;
+
+        getIdDisplayPlayer('player1', 'player2', 'winnerDisplay', 'textWinnerDisplay');
+
+        document.getElementById("startGame").addEventListener('click', function () {
+            const gridSize = parseInt(document.getElementById("gridSize").value)
+            const sizeWinnerScale = parseInt(document.getElementById("sizeWinnerScale").value);
+            const page_1 = document.getElementById("page_1");
+            const page_3 = document.getElementById("page_3");
+            const tableDisplay = document.getElementById("tableDisplay");
+            if (gridSize < 3 || !gridSize) {
+                alert("ขนาดตารางที่ต่ำสุดคือ 3 x 3");
+            }
+            else if ((sizeWinnerScale < 3 || sizeWinnerScale > gridSize) || !sizeWinnerScale) {
+                alert("ขนาดช่องการชนะที่ต่ำสุดคือ 3 และไม่เกินขนาดตาราง");
+            }
+            else {
+                startGame(gridSize, sizeWinnerScale, tableDisplay);
+                page_1.style.display = "none";
+                page_3.style.display = "flex";
+            }
+        });
+
+        document.getElementById("newGame").addEventListener('click', function () {
+            const tableDisplay = document.getElementById("tableDisplay");
+            const page_1 = document.getElementById("page_1");
+            const page_4 = document.getElementById("page_4");
+            const player1 = document.getElementById("player1");
+            const player2 = document.getElementById("player2");
+            const winnerDisplay = document.getElementById("winnerDisplay");
+            page_1.style.display = "inline";
+            page_3.style.display = "none";
+            player1.style.color = "#000000";
+            player2.style.color = "#9c9c9c";
+            winnerDisplay.style.display = "none";
+            tableDisplay.style.display = "none";
+        });
+
+        document.getElementById("historyPage").addEventListener('click', function () {
+            fetch('/getData')
+                .then(response => response.json())
+                .then(data => {
+                    historyFromDatabase = data;
+                    goToPage2();
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        document.getElementById("backPage_1").addEventListener('click', function () {
+            const page_1 = document.getElementById("page_1");
+            const page_2 = document.getElementById("page_2");
+            const tableDisplay = document.getElementById("tableDisplay");
+            page_1.style.display = "inline";
+            page_2.style.display = "none";
+            tableDisplay.innerHTML = ``;
+            indexStep = -1;
+        });
+
+        document.getElementById("stepFront").addEventListener('click', function () {
+            const stepBack = document.getElementById("stepBack");
+            const stepFront = document.getElementById("stepFront");
+            stepBack.disabled = false;
+            indexStep += 1;
+            document.getElementById(`x${historyStep[indexStep].x}y${historyStep[indexStep].y}`).innerHTML = historyStep[indexStep].data;
+            if (indexStep == historyStep.length - 1) {
+                stepFront.disabled = true;
+            }
+        });
+
+        document.getElementById("stepBack").addEventListener('click', function () {
+            const stepBack = document.getElementById("stepBack");
+            const stepFront = document.getElementById("stepFront");
+            const tableDisplay = document.getElementById("tableDisplay");
+            stepFront.disabled = false;
+            document.getElementById(`x${historyStep[indexStep].x}y${historyStep[indexStep].y}`).innerHTML = ``;
+            indexStep -= 1;
+            if (indexStep == -1) {
+                stepBack.disabled = true;
+            }
+        });
+
+        document.getElementById("historyListSelect").addEventListener('change', function () {
+            const tableDisplay = document.getElementById("tableDisplay");
+            const stepBack = document.getElementById("stepBack");
+            const stepFront = document.getElementById("stepFront");
+            indexStep = -1;
+            historyListSelectIndex = this.value;
+            historyStep = JSON.parse(historyFromDatabase[historyListSelectIndex].history);
+            gridHistorySelected = createGridHistory(historyFromDatabase[historyListSelectIndex]);
+            tableDisplay.innerHTML = drawGridHistory(historyFromDatabase[historyListSelectIndex], gridHistorySelected);
+            tableDisplay.style.display = "inline";
+            stepBack.disabled = true;
+            stepFront.disabled = false;
+        });
+
+        function goToPage2() {
+            const page_1 = document.getElementById("page_1");
+            const page_2 = document.getElementById("page_2");
+            const historyListSelect = document.getElementById("historyListSelect");
+            const tableDisplay = document.getElementById("tableDisplay");
+            const stepFront = document.getElementById("stepFront");
+            page_1.style.display = "none";
+            page_2.style.display = "inline";
+            let lists = ``;
+            historyListSelectIndex = 0;
+            for (let i = 0; i < historyFromDatabase.length; i++) {
+                lists += `<option value="${i}" ${i == 0 ? 'selected' : ''}>ครั้งที่ ${i + 1} ผู้ชนะ ${historyFromDatabase[i].playerWinner} ขนาดตาราง ${historyFromDatabase[i].gridSize} X ${historyFromDatabase[i].gridSize} กฎการชนะ ${historyFromDatabase[i].sizeWinnerScale}</option>`;
+                if (i == 0) {
+                    historyStep = JSON.parse(historyFromDatabase[historyListSelectIndex].history);
+                    gridHistorySelected = createGridHistory(historyFromDatabase[historyListSelectIndex]);
+                    tableDisplay.innerHTML = drawGridHistory(historyFromDatabase[historyListSelectIndex], gridHistorySelected);
+                    tableDisplay.style.display = "inline";
+                    stepFront.disabled = false;
+                }
+            }
+            historyListSelect.innerHTML = lists;
+        }
+
+        //สร้างตารางจากประวัติที่เลือก
+        function createGridHistory(historySelected) {
+            let resultGrid = [];
+            for (let y = 0; y < historySelected.gridSize; y++) {
+                for (let x = 0; x < historySelected.gridSize; x++) {
+                    resultGrid.push({ x: x, y: y, data: '' });
+                }
+            }
+            return resultGrid;
+        }
+
+        //วาดตารางจากประวัติที่เลือก
+        function drawGridHistory(historySelected, gridHistorySelected) {
+            let gridDisplay = ``;
+            let rowGrid = ``;
+            for (let i = 0; i < gridHistorySelected.length; i++) {
+                rowGrid += `<td class="slot-no-action" id="x${gridHistorySelected[i].x}y${gridHistorySelected[i].y}" ></td>`;//i:${i},${gridHistorySelected[i].x},${gridHistorySelected[i].y}
+                if (gridHistorySelected[i].x == (historySelected.gridSize - 1)) {
+                    gridDisplay += `<tr>${rowGrid}</tr>`;
+                    rowGrid = ``;
+                }
+            }
+            return gridDisplay;
+        }
+
+    </script>
+</body>
+
+</html>
